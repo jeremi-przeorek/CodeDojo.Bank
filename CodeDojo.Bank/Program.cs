@@ -16,6 +16,8 @@
             { new[] { " _ ", "|_|", " _|" }, '9' }
         };
 
+        private const char InvalidChar = '?';
+
         static void Main(string[] args)
         {
             string[] text = File.ReadAllLines("input.txt");
@@ -40,12 +42,48 @@
                         var value = _digits[matchingDigit];
                         output.Add(value);
                     }
+                    else
+                    {
+                        output.Add(InvalidChar);
+                    }
                 }
 
-                Console.WriteLine(new string(output.ToArray()));
+                string entry = new string(output.ToArray());
+                entry = entry switch
+                {
+                    string e when IsIllegible(e) => entry + " ILL",
+                    string e when !IsCheckSumValid(e) => entry + " ERR",
+                    _ => entry
+                };
+                Console.WriteLine(entry);
+
+                
                 output.Clear();
             }
-
         }
+
+        static bool IsCheckSumValid(string input)
+        {
+            IEnumerable<char> reversedInput = input.Reverse();
+
+            int counter = 1;
+            int sum = 0;
+            foreach (var letter in reversedInput)
+            {
+                int output;
+                bool isValid = int.TryParse(letter.ToString(), out output);
+                if (isValid)
+                {
+                    sum += output * counter;
+                }
+
+                counter++;
+            }
+
+            return sum % 11 == 0;
+        }
+
+        static bool IsIllegible(string input) 
+            => input.Any(x => x is '?');
     }
 }
