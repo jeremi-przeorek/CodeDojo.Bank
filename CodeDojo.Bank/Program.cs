@@ -38,6 +38,8 @@
 
             List<char> output = new();
 
+            var alternativesWithPosition = new Dictionary<int, List<char>>();
+
             for (int i = 0; i < text.Length - 4; i += 4)
             {
                 var linesToProcess = text[i..(i + 4)];
@@ -59,9 +61,28 @@
                     else
                     {
                         output.Add(InvalidChar);
+                        Console.WriteLine(top);
+                        Console.WriteLine(middle);
+                        Console.WriteLine(bottom);
+                        var alternativesForDigits =
+                            GetAlternativesForDigits(
+                                new KeyValuePair<string[], char>(new[] { top, middle, bottom }, '?'));
+                        alternativesWithPosition.Add(j, alternativesForDigits);
                     }
                 }
 
+                foreach (var alt in alternativesWithPosition)
+                {
+                    Console.WriteLine(alt.Key);
+                    alt.Value.ForEach(Console.WriteLine);
+                    
+                    //Replacing happens here
+                    entry[alt.Key] = 
+                }
+                
+                
+                alternativesWithPosition.Clear();
+                
                 string entry = new string(output.ToArray());
                 entry = entry switch
                 {
@@ -69,7 +90,7 @@
                     string e when !IsCheckSumValid(e) => entry + " ERR",
                     _ => entry
                 };
-                
+
                 Console.WriteLine(entry);
 
                 if (entry.EndsWith("ERR"))
@@ -105,7 +126,6 @@
                     }
                 }
 
-
                 output.Clear();
             }
         }
@@ -133,5 +153,42 @@
 
         static bool IsIllegible(string input)
             => input.Any(x => x is '?');
+
+        private static List<char> GetAlternativesForDigits(KeyValuePair<string[], char> digit)
+        {
+            List<char> output = new();
+
+            for (int line = 0; line < digit.Key.Length; line++)
+            {
+                for (int c = 0; c < digit.Key[line].Length; c++)
+                {
+                    string lineShape = new string(digit.Key[line]);
+                    char[] ch = lineShape.ToCharArray();
+                    ch[c] = ch[c] == ' ' ? c == 1 ? '_' : line > 0 ? '|' : ' ' : ' ';
+                    string newLineShape = new string(ch);
+                    String[] newDigitShape = new string[digit.Key.Length];
+
+
+                    for (int i = 0; i < newDigitShape.Length; i++)
+                    {
+                        newDigitShape[i] = i != line ? digit.Key[i] : newLineShape;
+                    }
+
+
+                    var result = _digits.FirstOrDefault(d =>
+                        d.Key[0] == newDigitShape[0] && d.Key[1] == newDigitShape[1] && d.Key[2] == newDigitShape[2]);
+                    if (result.Value != 0)
+                    {
+                        if (result.Value != digit.Value)
+                        {
+                            Console.WriteLine($"for {digit.Value} an alternative is {result.Value} ");
+                            output.Add(result.Value);
+                        }
+                    }
+                }
+            }
+
+            return output;
+        }
     }
 }
