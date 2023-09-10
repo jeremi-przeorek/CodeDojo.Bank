@@ -1,4 +1,4 @@
-﻿namespace CodeDojo.Bank // Note: actual namespace depends on the project name.
+namespace CodeDojo.Bank // Note: actual namespace depends on the project name.
 {
     internal class Program
     {
@@ -42,6 +42,7 @@
 
             for (int i = 0; i < text.Length - 4; i += 4)
             {
+                alternativesWithPosition.Clear();
                 var linesToProcess = text[i..(i + 4)];
                 for (int j = 0; j < linesToProcess[0].Length / 3; j++)
                 {
@@ -70,62 +71,60 @@
                         alternativesWithPosition.Add(j, alternativesForDigits);
                     }
                 }
-
+                string entry = new string(output.ToArray());
+                Console.WriteLine($"Starting {entry}");
                 foreach (var alt in alternativesWithPosition)
                 {
-                    Console.WriteLine(alt.Key);
-                    alt.Value.ForEach(Console.WriteLine);
-                    
-                    //Replacing happens here
-                    entry[alt.Key] = 
-                }
-                
-                
-                alternativesWithPosition.Clear();
-                
-                string entry = new string(output.ToArray());
-                entry = entry switch
-                {
-                    string e when IsIllegible(e) => entry + " ILL",
-                    string e when !IsCheckSumValid(e) => entry + " ERR",
-                    _ => entry
-                };
-
-                Console.WriteLine(entry);
-
-                if (entry.EndsWith("ERR"))
-                {
-                    List<string> validAlternatives = new();
-                    string digits = entry[0..9];
-                    for (var index = 0; index < digits.Length; index++)
+                    Console.WriteLine("Alternatives with position");
+                    Console.WriteLine($"Position:{alt.Key}");
+                    foreach (var altDigit in alt.Value)
                     {
-                        var digit = digits[index];
-                        char[] possibleDigits = _similarDigits[digit];
 
-                        foreach (var possibleDigit in possibleDigits)
+                        var altEntry=entry.Remove(alt.Key,1).Insert(alt.Key,altDigit.ToString());
+
+                        altEntry = altEntry switch
                         {
-                            char[] digitsCopy = digits.ToCharArray();
-                            digitsCopy[index] = possibleDigit;
+                            string e when IsIllegible(e) => altEntry + " ILL",
+                            string e when !IsCheckSumValid(e) => altEntry + " ERR",
+                            _ => altEntry
+                        };
 
-                            string input = new string(digitsCopy);
-                            if (IsCheckSumValid(input))
+                        Console.WriteLine(altEntry);
+
+                        if (altEntry.EndsWith("ERR"))
+                        {
+                            List<string> validAlternatives = new();
+                            string digits = altEntry[0..9];
+                            for (var index = 0; index < digits.Length; index++)
                             {
-                                validAlternatives.Add(input);
+                                var digit = digits[index];
+                                char[] possibleDigits = _similarDigits[digit];
+
+                                foreach (var possibleDigit in possibleDigits)
+                                {
+                                    char[] digitsCopy = digits.ToCharArray();
+                                    digitsCopy[index] = possibleDigit;
+
+                                    string input = new string(digitsCopy);
+                                    if (IsCheckSumValid(input))
+                                    {
+                                        validAlternatives.Add(input);
+                                    }
+                                }
+                            }
+
+                            if (validAlternatives.Count == 1)
+                            {
+                                Console.WriteLine(validAlternatives[0]);
+                            }
+
+                            if (validAlternatives.Count() > 1)
+                            {
+                                validAlternatives.ForEach(x => Console.WriteLine(x));
                             }
                         }
                     }
-
-                    if (validAlternatives.Count == 1)
-                    {
-                        Console.WriteLine(validAlternatives[0]);
-                    }
-
-                    if (validAlternatives.Count() > 1)
-                    {
-                        validAlternatives.ForEach(x => Console.WriteLine(x));
-                    }
                 }
-
                 output.Clear();
             }
         }
